@@ -42,18 +42,12 @@ const bakedTexture = textureLoader.load('baked.jpg')
 bakedTexture.flipY = false
 bakedTexture.encoding = THREE.sRGBEncoding
 
-const bsTexture = textureLoader.load('buildingAndStairs.jpg')
-bsTexture.flipY = false
-bsTexture.encoding = THREE.sRGBEncoding
-
 /**
  * Materials
  */
 // Baked material
 const bakedMaterial = new THREE.MeshBasicMaterial({ map: bakedTexture })
 bakedMaterial.side = THREE.DoubleSide
-const buildingAndStairsMaterial = new THREE.MeshBasicMaterial({ map: bsTexture })
-buildingAndStairsMaterial.side = THREE.DoubleSide
 
 /**
  * Emission Materials
@@ -74,17 +68,17 @@ gltfLoader.load(
         // bakedMesh.material = bakedMaterial
 
         gltf.scene.traverse((child) => {
-            // console.log(child);
+            console.log(child);
             child.material = bakedMaterial
         })
 
-        const buildingMesh = gltf.scene.children.find(child => child.name == 'building')
-        const stairsAMesh = gltf.scene.children.find(child => child.name == 'Stairs')
-        const stairs001BMesh = gltf.scene.children.find(child => child.name == 'Stairs001')
+        // const buildingMesh = gltf.scene.children.find(child => child.name == 'building')
+        // const stairsAMesh = gltf.scene.children.find(child => child.name == 'Stairs')
+        // const stairs001BMesh = gltf.scene.children.find(child => child.name == 'Stairs001')
 
-        buildingMesh.material = buildingAndStairsMaterial
-        stairsAMesh.material = buildingAndStairsMaterial
-        stairs001BMesh.material = buildingAndStairsMaterial
+        // buildingMesh.material = buildingAndStairsMaterial
+        // stairsAMesh.material = buildingAndStairsMaterial
+        // stairs001BMesh.material = buildingAndStairsMaterial
 
         // Emissions
         const lobbyLightPillarMesh = gltf.scene.children.find(child => child.name == 'LobbyLightPillar')
@@ -104,6 +98,17 @@ gltfLoader.load(
 
         const hiddenDoorEmissionMesh3 = gltf.scene.children.find(child => child.name == 'HiddenDoorEmission')
         hiddenDoorEmissionMesh3.material = orangeLightMaterial
+
+        // Text
+        const cafeTextMesh = gltf.scene.children.find(child => child.name == 'Text')
+        cafeTextMesh.material = roofLightMaterial
+        const wifiTextMesh = gltf.scene.children.find(child => child.name == 'Text001')
+        wifiTextMesh.material = orangeLightMaterial
+        const epicCodeTextMesh = gltf.scene.children.find(child => child.name == 'Text002')
+        epicCodeTextMesh.material = orangeLightMaterial
+
+        const railLightMesh = gltf.scene.children.find(child => child.name == 'LightMetalEmission')
+        railLightMesh.material = orangeLightMaterial
         
         scene.add(gltf.scene)
     }
