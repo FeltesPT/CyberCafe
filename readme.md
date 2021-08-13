@@ -1,6 +1,8 @@
 # Cybercafe
 Original Design: https://www.turbosquid.com/3d-models/city-3d-model-1667110
 
+ThreeJS Setup done following https://threejs-journey.xyz/
+
 
 # Setup
 Download [Node.js](https://nodejs.org/en/download/).
