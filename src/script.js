@@ -5,6 +5,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 
+// Bloom
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass";
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 
 /**
  * Base
@@ -64,21 +68,9 @@ gltfLoader.load(
     'cafe.glb',
     (gltf) => {
         
-        // const bakedMesh = gltf.scene.children.find(child => child.name == 'Baked')
-        // bakedMesh.material = bakedMaterial
-
         gltf.scene.traverse((child) => {
-            console.log(child);
             child.material = bakedMaterial
         })
-
-        // const buildingMesh = gltf.scene.children.find(child => child.name == 'building')
-        // const stairsAMesh = gltf.scene.children.find(child => child.name == 'Stairs')
-        // const stairs001BMesh = gltf.scene.children.find(child => child.name == 'Stairs001')
-
-        // buildingMesh.material = buildingAndStairsMaterial
-        // stairsAMesh.material = buildingAndStairsMaterial
-        // stairs001BMesh.material = buildingAndStairsMaterial
 
         // Emissions
         const lobbyLightPillarMesh = gltf.scene.children.find(child => child.name == 'LobbyLightPillar')
@@ -135,6 +127,9 @@ window.addEventListener('resize', () =>
     // Update renderer
     renderer.setSize(sizes.width, sizes.height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+    // Update effect composer
+    effectComposer.setSize(sizes.width, sizes.height)
 })
 
 /**
@@ -158,14 +153,69 @@ const renderer = new THREE.WebGLRenderer({
     canvas: canvas,
     antialias: true
 })
+renderer.shadowMap.enabled = true
+renderer.shadowMap.type = THREE.PCFShadowMap
+renderer.physicallyCorrectLights = true
+renderer.outputEncoding = THREE.sRGBEncoding
+renderer.toneMapping = THREE.ReinhardToneMapping
+renderer.toneMappingExposure = 1.5
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-renderer.outputEncoding = THREE.sRGBEncoding
+
+/**
+ * Post processing
+ */
+ let RenderTargetClass = null
+
+ if(renderer.getPixelRatio() === 1 && renderer.capabilities.isWebGL2)
+ {
+    RenderTargetClass = THREE.WebGLMultisampleRenderTarget
+    console.log('Using WebGLMultisampleRenderTarget')
+ }
+ else
+ {
+    RenderTargetClass = THREE.WebGLRenderTarget
+    console.log('Using WebGLRenderTarget')
+ }
+ 
+ const renderTarget = new RenderTargetClass(
+    sizes.width,
+    sizes.height,
+    {
+        minFilter: THREE.LinearFilter,
+        magFilter: THREE.LinearFilter,
+        format: THREE.RGBAFormat,
+        encoding: THREE.sRGBEncoding
+    }
+ )
+
+// Effect composer
+const effectComposer = new EffectComposer(renderer, renderTarget)
+effectComposer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+effectComposer.setSize(sizes.width, sizes.height)
+
+// Render pass
+const renderPass = new RenderPass(scene, camera)
+effectComposer.addPass(renderPass)
+
+// Unreal Bloom pass
+const unrealBloomPass = new UnrealBloomPass()
+unrealBloomPass.enabled = true
+effectComposer.addPass(unrealBloomPass)
+
+unrealBloomPass.strength = 1.482
+unrealBloomPass.radius = 1.351
+unrealBloomPass.threshold = 0.077
+
+gui.add(unrealBloomPass, 'enabled')
+gui.add(unrealBloomPass, 'strength').min(0).max(2).step(0.001)
+gui.add(unrealBloomPass, 'radius').min(0).max(2).step(0.001)
+gui.add(unrealBloomPass, 'threshold').min(0).max(1).step(0.001)
 
 /**
  * Clear color
  */
-debugObject.clearColor = '#333333'
+debugObject.clearColor = '#070707'
 renderer.setClearColor(debugObject.clearColor)
 gui.addColor(debugObject, 'clearColor').onChange(() => {
     renderer.setClearColor(debugObject.clearColor)
@@ -184,7 +234,8 @@ const tick = () =>
     controls.update()
 
     // Render
-    renderer.render(scene, camera)
+    // renderer.render(scene, camera)
+    effectComposer.render()
 
     // Call tick again on the next frame
     window.requestAnimationFrame(tick)
