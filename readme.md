@@ -1,6 +1,8 @@
-# Three.js Journey
+# Cybercafe
+Original Design: https://www.turbosquid.com/3d-models/city-3d-model-1667110
 
-## Setup
+
+# Setup
 Download [Node.js](https://nodejs.org/en/download/).
 Run this followed commands:
 
